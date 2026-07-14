@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const mongoose = require('mongoose');
 const db = require('../helpers/db-helper');
 const Branch = require('../../server/models/Branch');
 const User = require('../../server/models/User');
@@ -60,4 +61,22 @@ test('proprietor can list staff', async () => {
   await staffService.create(prop, { fullName: 'Jane', email: 'jane@x.com', branchId: String(branch._id), tempPassword: 'temp123' });
   const list = await staffService.list(prop);
   assert.equal(list.length, 2); // proprietor + created head teacher
+});
+
+test('create rejects a non-existent branch', async () => {
+  const prop = await proprietor();
+  const ghostBranchId = String(new mongoose.Types.ObjectId());
+  await assert.rejects(
+    () => staffService.create(prop, { fullName: 'Jane', email: 'jane@x.com', branchId: ghostBranchId, tempPassword: 'temp123' }),
+    /unknown branch/i
+  );
+});
+
+test('create rejects when a required field is missing', async () => {
+  const prop = await proprietor();
+  const branch = await Branch.create({ name: 'Branch One' });
+  await assert.rejects(
+    () => staffService.create(prop, { email: 'jane@x.com', branchId: String(branch._id), tempPassword: 'temp123' }),
+    /required/i
+  );
 });
