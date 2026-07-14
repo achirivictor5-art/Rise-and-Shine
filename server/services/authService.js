@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const { hashPassword, verifyPassword, signToken, verifyToken } = require('../lib/auth');
 const { unauthorized, badRequest } = require('../lib/errors');
@@ -14,7 +15,7 @@ async function login({ email, password }) {
 
 async function resolveUser(token) {
   const payload = verifyToken(token);
-  if (!payload || !payload.sub) return null;
+  if (!payload || !payload.sub || !mongoose.isValidObjectId(payload.sub)) return null;
   return User.findById(payload.sub);
 }
 

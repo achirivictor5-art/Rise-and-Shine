@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const db = require('../helpers/db-helper');
 const User = require('../../server/models/User');
-const { hashPassword, verifyPassword } = require('../../server/lib/auth');
+const { hashPassword, verifyPassword, signToken } = require('../../server/lib/auth');
 const authService = require('../../server/services/authService');
 
 test.before(async () => { await db.connect(); });
@@ -59,4 +59,21 @@ test('changePassword updates the hash and clears mustChangePassword', async () =
 test('changePassword rejects a short password', async () => {
   const user = await makeUser();
   await assert.rejects(() => authService.changePassword(user, 'x'), /6 characters/i);
+});
+
+test('login gives the same error for an unknown email as for a wrong password', async () => {
+  await makeUser();
+  await assert.rejects(
+    () => authService.login({ email: 'nobody@x.com', password: 'whatever' }),
+    /invalid email or password/i
+  );
+});
+
+test('login rejects when a field is missing', async () => {
+  await assert.rejects(() => authService.login({ email: 'test@x.com' }), /required/i);
+});
+
+test('resolveUser returns null for a validly-signed token whose sub is not an ObjectId', async () => {
+  const token = signToken({ sub: 'not-an-object-id', role: 'proprietor' });
+  assert.equal(await authService.resolveUser(token), null);
 });
