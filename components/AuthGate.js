@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { api } from '../lib/api';
 
 export default function AuthGate({ children }) {
   const [needsPassword, setNeedsPassword] = useState(false);
@@ -11,14 +11,13 @@ export default function AuthGate({ children }) {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    const hash = window.location.hash || '';
-    if (hash.includes('type=invite') || hash.includes('type=recovery')) {
-      setNeedsPassword(true);
-    }
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setNeedsPassword(true);
-    });
-    return () => listener.subscription.unsubscribe();
+    if (!window.location.pathname.startsWith('/portal')) return;
+    api
+      .get('/api/auth/me')
+      .then((me) => {
+        if (me.must_change_password) setNeedsPassword(true);
+      })
+      .catch(() => {});
   }, []);
 
   async function handleSetPassword(e) {
@@ -33,16 +32,17 @@ export default function AuthGate({ children }) {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await api.put('/api/auth/password', { newPassword: password });
+      setDone(true);
+      setTimeout(() => {
+        window.location.href = '/portal/dashboard';
+      }, 1200);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setDone(true);
-    setTimeout(() => {
-      window.location.href = '/portal/dashboard';
-    }, 1200);
   }
 
   if (needsPassword) {
