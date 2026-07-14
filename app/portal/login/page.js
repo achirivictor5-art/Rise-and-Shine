@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { api } from '../../../lib/api';
 
 export default function Login() {
   const router = useRouter();
@@ -11,22 +11,24 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace('/portal/dashboard');
-    });
+    api
+      .get('/api/auth/me')
+      .then(() => router.replace('/portal/dashboard'))
+      .catch(() => {});
   }, [router]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await api.post('/api/auth/login', { email, password });
+      router.push('/portal/dashboard');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    router.push('/portal/dashboard');
   }
 
   return (
