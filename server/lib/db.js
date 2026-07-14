@@ -10,7 +10,12 @@ async function connectDb() {
     if (!uri) throw new Error('MONGODB_URI is not set');
     cached.promise = mongoose.connect(uri).then((m) => m.connection);
   }
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.promise = null;
+    throw err;
+  }
   return cached.conn;
 }
 
