@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { api } from '../../../lib/api';
 
 const statusLabel = { paid: 'Fully paid', partial: 'Partial', due: 'Outstanding' };
 
@@ -18,44 +18,53 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState('');
 
+  // Staff panel (proprietor only)
+  const [staff, setStaff] = useState([]);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [staffForm, setStaffForm] = useState({ fullName: '', email: '', branchId: '', tempPassword: '' });
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [staffNotice, setStaffNotice] = useState('');
+
+  const refreshRecords = useCallback(async () => {
+    const data = await api.get('/api/records');
+    setRecords(data || []);
+  }, []);
+
+  const refreshStaff = useCallback(async () => {
+    const data = await api.get('/api/staff');
+    setStaff(data || []);
+  }, []);
+
   const loadEverything = useCallback(async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    let profileRow;
+    try {
+      profileRow = await api.get('/api/auth/me');
+    } catch {
       router.replace('/portal/login');
       return;
     }
-    const userId = sessionData.session.user.id;
-
-    const { data: profileRow } = await supabase.from('profiles').select('*').eq('id', userId).single();
     setProfile(profileRow);
 
-    const { data: branchRows } = await supabase.from('branches').select('*').order('name');
+    const branchRows = await api.get('/api/branches');
     setBranches(branchRows || []);
 
-    if (profileRow?.role === 'head_teacher' && profileRow.branch_id) {
+    if (profileRow.role === 'head_teacher' && profileRow.branch_id) {
       setForm((f) => ({ ...f, branch_id: profileRow.branch_id }));
     }
 
-    await refreshRecords(profileRow);
+    await refreshRecords();
+    if (profileRow.role === 'proprietor') {
+      await refreshStaff();
+    }
     setLoading(false);
-  }, [router]);
-
-  async function refreshRecords(profileRow) {
-    let query = supabase
-      .from('payment_records')
-      .select('*, branches(name)')
-      .order('created_at', { ascending: false });
-
-    const { data } = await query;
-    setRecords(data || []);
-  }
+  }, [router, refreshRecords, refreshStaff]);
 
   useEffect(() => {
     loadEverything();
   }, [loadEverything]);
 
   async function handleLogout() {
-    await supabase.auth.signOut();
+    await api.post('/api/auth/logout');
     router.replace('/portal/login');
   }
 
@@ -63,32 +72,23 @@ export default function Dashboard() {
     e.preventDefault();
     setSaving(true);
     setNotice('');
-    const branch_id = profile.role === 'head_teacher' ? profile.branch_id : form.branch_id;
-
-    if (!branch_id) {
-      setNotice('Please choose a branch.');
+    try {
+      await api.post('/api/records', {
+        pupilName: form.pupil_name,
+        class: form.class,
+        item: form.item,
+        amount: Number(form.amount) || 0,
+        status: form.status,
+        branchId: profile.role === 'head_teacher' ? profile.branch_id : form.branch_id,
+      });
+      setForm({ pupil_name: '', class: '', item: '', amount: '', status: 'due', branch_id: profile.role === 'head_teacher' ? profile.branch_id : '' });
+      setFormOpen(false);
+      await refreshRecords();
+    } catch (err) {
+      setNotice(err.message);
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const { error } = await supabase.from('payment_records').insert({
-      branch_id,
-      pupil_name: form.pupil_name,
-      class: form.class,
-      item: form.item,
-      amount: Number(form.amount) || 0,
-      status: form.status,
-      added_by: profile.id,
-    });
-
-    setSaving(false);
-    if (error) {
-      setNotice(error.message);
-      return;
-    }
-    setForm({ pupil_name: '', class: '', item: '', amount: '', status: 'due', branch_id: profile.role === 'head_teacher' ? profile.branch_id : '' });
-    setFormOpen(false);
-    refreshRecords(profile);
   }
 
   async function handleEdit(record) {
@@ -97,15 +97,33 @@ export default function Dashboard() {
     if (newAmount === null) return;
     const newStatus = window.prompt('Status: paid / partial / due', record.status);
     if (newStatus === null) return;
-    const { error } = await supabase
-      .from('payment_records')
-      .update({ amount: Number(newAmount) || 0, status: newStatus })
-      .eq('id', record.id);
-    if (error) {
-      alert(error.message);
-      return;
+    try {
+      await api.patch(`/api/records/${record.id}`, { amount: Number(newAmount) || 0, status: newStatus });
+      await refreshRecords();
+    } catch (err) {
+      alert(err.message);
     }
-    refreshRecords(profile);
+  }
+
+  async function handleAddStaff(e) {
+    e.preventDefault();
+    setSavingStaff(true);
+    setStaffNotice('');
+    try {
+      await api.post('/api/staff', {
+        fullName: staffForm.fullName,
+        email: staffForm.email,
+        branchId: staffForm.branchId,
+        tempPassword: staffForm.tempPassword,
+      });
+      setStaffForm({ fullName: '', email: '', branchId: '', tempPassword: '' });
+      setStaffOpen(false);
+      await refreshStaff();
+    } catch (err) {
+      setStaffNotice(err.message);
+    } finally {
+      setSavingStaff(false);
+    }
   }
 
   if (loading) {
@@ -263,6 +281,59 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+
+        {isProprietor && (
+          <div className="panel">
+            <div className="panel-head">
+              <h3>Staff Accounts</h3>
+              <button className="add-btn" onClick={() => setStaffOpen((v) => !v)}>
+                {staffOpen ? 'Close form' : '+ Add Head Teacher'}
+              </button>
+            </div>
+
+            {staffOpen && (
+              <form className="add-form" onSubmit={handleAddStaff}>
+                <div className="field">
+                  <label>Full name</label>
+                  <input required value={staffForm.fullName} onChange={(e) => setStaffForm({ ...staffForm, fullName: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label>Email</label>
+                  <input required type="email" value={staffForm.email} onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label>Branch</label>
+                  <select required value={staffForm.branchId} onChange={(e) => setStaffForm({ ...staffForm, branchId: e.target.value })}>
+                    <option value="">Choose branch</option>
+                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Temporary password</label>
+                  <input required value={staffForm.tempPassword} onChange={(e) => setStaffForm({ ...staffForm, tempPassword: e.target.value })} placeholder="min 6 characters" />
+                </div>
+                <button type="submit" disabled={savingStaff}>{savingStaff ? 'Saving…' : 'Create Account'}</button>
+              </form>
+            )}
+            {staffNotice && <div className="error-msg" style={{ margin: '0 22px 16px' }}>{staffNotice}</div>}
+
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Branch</th><th>Role</th></tr>
+              </thead>
+              <tbody>
+                {staff.map((s) => (
+                  <tr key={s.id}>
+                    <td className="pupil-name">{s.full_name}</td>
+                    <td>{s.email}</td>
+                    <td><span className="branch-tag">{branches.find((b) => b.id === s.branch_id)?.name || '—'}</span></td>
+                    <td>{s.role === 'proprietor' ? 'Proprietor' : 'Head Teacher'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {!isProprietor && (
           <div className="lock-note">
