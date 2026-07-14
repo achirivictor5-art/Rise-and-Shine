@@ -133,7 +133,7 @@ export default function Dashboard() {
   if (!profile) {
     return (
       <div style={{ padding: 40 }}>
-        <p>Your account has no profile yet. Ask the proprietor to check Table Editor → profiles.</p>
+        <p>Your account isn&apos;t set up yet. Please contact the proprietor.</p>
       </div>
     );
   }
