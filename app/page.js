@@ -96,7 +96,7 @@ export default function HomePage() {
           <div className="branches">
             {['AGIP', 'LOGPOM', 'IPD'].map((label) => (
                 <div className="branch-card" key={label}>
-                  <div className="branch-top"><p className="eyebrow">Branch</p><h3>Rise and Shine — {label}</h3></div>
+                 <div className="branch-top"><p className="eyebrow">Branch</p><h3>Rise and Shine — {label}</h3></div>
                 <div className="branch-body">
                   <div className="branch-row">📍 <span><b>Address:</b> [Street, Neighbourhood, City]</span></div>
                   <div className="branch-row">📞 <span><b>Tel:</b> [Branch phone]</span></div>
