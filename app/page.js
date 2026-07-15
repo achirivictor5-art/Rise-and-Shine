@@ -94,9 +94,9 @@ export default function HomePage() {
             <p>One school. Three doors. Update the details below with each branch&apos;s real address, phone line, and head teacher.</p>
           </div>
           <div className="branches">
-            {['One', 'Two', 'Three'].map((label) => (
-              <div className="branch-card" key={label}>
-                <div className="branch-top"><p className="eyebrow">Branch {label}</p><h3>Rise and Shine — [Location {label}]</h3></div>
+            {['AGIP', 'LOGPOM', 'IPD'].map((label) => (
+                <div className="branch-card" key={label}>
+                  <div className="branch-top"><p className="eyebrow">Branch</p><h3>Rise and Shine — {label}</h3></div>
                 <div className="branch-body">
                   <div className="branch-row">📍 <span><b>Address:</b> [Street, Neighbourhood, City]</span></div>
                   <div className="branch-row">📞 <span><b>Tel:</b> [Branch phone]</span></div>
@@ -175,7 +175,7 @@ export default function HomePage() {
             <h2 style={{ margin: '10px 0 20px' }}>Send us a message</h2>
             <div className="field"><label>Full name</label><input type="text" placeholder="Your name" /></div>
             <div className="field"><label>Branch of interest</label>
-              <select><option>Branch One</option><option>Branch Two</option><option>Branch Three</option><option>Not sure yet</option></select>
+              <select><option>AGIP</option><option>LOGPOM</option><option>IPD</option><option>Not sure yet</option></select>
             </div>
             <div className="field"><label>Phone number</label><input type="text" placeholder="6XX XXX XXX" /></div>
             <div className="field"><label>Message</label><textarea placeholder="Tell us about your child and what you need"></textarea></div>
