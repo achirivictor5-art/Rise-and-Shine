@@ -190,12 +190,10 @@ export default function Dashboard() {
         <div className="panel">
           <div className="panel-head">
             <h3>{isProprietor ? 'All Branches — Pupils' : `${branchName} — Pupils`}</h3>
-            {isProprietor && (
-              <button className="add-btn" onClick={() => setAddOpen((v) => !v)}>{addOpen ? 'Close form' : '+ Add Pupil'}</button>
-            )}
+            <button className="add-btn" onClick={() => setAddOpen((v) => !v)}>{addOpen ? 'Close form' : '+ Add Pupil'}</button>
           </div>
 
-          {addOpen && isProprietor && (
+          {addOpen && (
             <form onSubmit={handleAddPupil} style={{ padding: '20px 22px', borderBottom: '1px solid var(--line)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               <div className="field"><label>Full name</label><input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
               <div className="field"><label>Class</label>
@@ -204,10 +202,14 @@ export default function Dashboard() {
                 </select>
               </div>
               <div className="field"><label>Branch</label>
-                <select required value={form.branch_id} onChange={(e) => setForm({ ...form, branch_id: e.target.value })}>
-                  <option value="">Choose branch</option>
-                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
+                {isProprietor ? (
+                  <select required value={form.branch_id} onChange={(e) => setForm({ ...form, branch_id: e.target.value })}>
+                    <option value="">Choose branch</option>
+                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                ) : (
+                  <input value={branchName} disabled style={{ background: '#f2f2f0' }} />
+                )}
               </div>
               <div className="field"><label>Date of birth</label><input type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} /></div>
               <div className="field"><label>Gender</label><input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="e.g. Male / Female" /></div>
