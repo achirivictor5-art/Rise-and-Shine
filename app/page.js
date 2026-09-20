@@ -67,6 +67,17 @@ export default function HomePage() {
             <div className="about-card"><h3>Our Mission</h3><p>To raise confident, well-rounded children through a nurturing, disciplined, and joyful learning environment — across every branch, without exception.</p></div>
             <div className="about-card"><h3>Our Promise to Parents</h3><p>A safe, clean, well-staffed classroom; a head teacher who knows your child by name; and clear, honest communication — including on school fees and payments.</p></div>
             <div className="about-card"><h3>Our Vision</h3><p>To be the most trusted name in early childhood and primary education in every community we serve.</p></div>
+            <div className="about-card">
+              <h3>School Leadership</h3>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginTop: 6 }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--sage)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--forest)', flexShrink: 0 }}>NG</div>
+                <div>
+                  <div style={{ fontWeight: 700 }}>Njuwe Gillian</div>
+                  <div style={{ fontSize: '0.8rem', color: '#8a8f80', marginBottom: 4 }}>General Head Teacher</div>
+                  <p style={{ margin: 0 }}>Oversees day-to-day administration across all three branches — supporting teachers, upholding standards, and fostering a safe, inclusive learning environment school-wide.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -91,16 +102,48 @@ export default function HomePage() {
           <div className="section-head">
             <p className="eyebrow">Find us</p>
             <h2>Our Three Branches</h2>
-            <p>One school. Three doors. Update the details below with each branch&apos;s real address, phone line, and head teacher.</p>
+            <p>One school. Three doors. Update the addresses and phone lines below once confirmed.</p>
           </div>
           <div className="branches">
-            {['AGIP', 'LOGPOM', 'IPD'].map((label) => (
-                <div className="branch-card" key={label}>
-                 <div className="branch-top"><p className="eyebrow">Branch</p><h3>Rise and Shine — {label}</h3></div>
+            {[
+              {
+                label: 'AGIP',
+                address: 'Carrefour AGIP, Douala',
+                phone: '676 082 107',
+                name: 'Mme Ajingni Renalty',
+                photo: '/team/agip-renalty.jpg',
+                bio: '11 years in education, with advanced training in curriculum development and currently pursuing a Master\u2019s in Educational Management.',
+              },
+              {
+                label: 'LOGPOM',
+                address: 'Derri\u00e8re Gabon Bar, Logpom, Douala',
+                phone: '676 082 107',
+                name: 'Mme Pelagil Bihnange',
+                photo: '/team/logpom-bihnange.jpg',
+                bio: '8+ years leading Nursery and Primary classrooms, fluent in English and French, known for standards-driven, inclusive teaching.',
+              },
+              {
+                label: 'IPD',
+                address: 'IPD Junction, Douala',
+                phone: '676 082 107',
+                name: 'Mme Prisca Lum Ambe',
+                photo: '/team/ipd-ambe.jpg',
+                bio: '16 years of experience across Nursery and Primary education, with a nurturing, discipline-oriented approach to school leadership.',
+              },
+            ].map((branch) => (
+                <div className="branch-card" key={branch.label}>
+                 <div className="branch-top"><p className="eyebrow">Branch</p><h3>Rise and Shine — {branch.label}</h3></div>
                 <div className="branch-body">
-                  <div className="branch-row">📍 <span><b>Address:</b> [Street, Neighbourhood, City]</span></div>
-                  <div className="branch-row">📞 <span><b>Tel:</b> [Branch phone]</span></div>
-                  <div className="branch-row">👤 <span><b>Head Teacher:</b> [Name]</span></div>
+                  <div className="branch-row">📍 <span><b>Address:</b> {branch.address}</span></div>
+                  <div className="branch-row">📞 <span><b>Tel:</b> {branch.phone}</span></div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', margin: '14px 0' }}>
+                    <img src={branch.photo} alt={branch.name} style={{ width: 64, height: 80, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{branch.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#8a8f80', marginBottom: 4 }}>Head Teacher</div>
+                      <div style={{ fontSize: '0.82rem', color: '#5a5f52', lineHeight: 1.4 }}>{branch.bio}</div>
+                    </div>
+                  </div>
                   <div className="branch-cta"><a href="#contact">Contact this branch</a></div>
                 </div>
               </div>
@@ -235,4 +278,4 @@ export default function HomePage() {
       </footer>
     </>
   );
-}
+}update branch addresses and phone numbers
